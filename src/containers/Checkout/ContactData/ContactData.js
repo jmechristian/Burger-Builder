@@ -15,7 +15,12 @@ state = {
                     type: 'text',
                     placeholder: 'Your Name'
                 },
-                value: ''
+                value: '',
+                validation: {
+                    required: true
+                },
+                valid: false,
+                touched: false
             },
             street: {
                 elementType: 'input',
@@ -23,7 +28,12 @@ state = {
                     type: 'text',
                     placeholder: 'Your Street'
                 },
-                value: ''
+                value: '',
+                validation: {
+                    required: true
+                },
+                valid: false,
+                touched: false
             },
             zipCode: {
                 elementType: 'input',
@@ -31,7 +41,14 @@ state = {
                     type: 'text',
                     placeholder: 'Your Zip'
                 },
-                value: ''
+                value: '',
+                validation: {
+                    required: true,
+                    minLenth: 5,
+                    maxLength: 5
+                },
+                valid: false,
+                touched: false
             },
              country: {
                 elementType: 'input',
@@ -39,7 +56,12 @@ state = {
                     type: 'text',
                     placeholder: 'Your Country'
                 },
-                value: ''
+                value: '',
+                validation: {
+                    required: true
+                },
+                valid: false,
+                touched: false
             },
             email: {
                 elementType: 'input',
@@ -47,7 +69,12 @@ state = {
                     type: 'email',
                     placeholder: 'Your Email'
                 },
-                value: ''
+                value: '',
+                validation: {
+                    required: true
+                },
+                valid: false,
+                touched: false
             },
             deliveryMethod: {
                 elementType: 'select',
@@ -57,11 +84,32 @@ state = {
                         {value: 'cheapest', displayValue: 'Cheapest'}
                     ]
                 },
-                value: ''
+                value: '',
+                validation: {},
+                valid: true
             } 
         },
+    formIsValid: false,
     loading: false
 }
+
+    checkValidity(value, rules) {
+        let isValid = true;
+        if (rules.required) {
+            isValid = value.trim() !== '' && isValid;
+        }
+
+        if (rules.minLenth) {
+            isValid = value.length >= rules.minLenth && isValid;
+        }
+
+        if (rules.maxLength) {
+            isValid = value.length <= rules.maxLength && isValid;
+        }
+
+
+        return isValid;
+    }
 
     inputChangedHandler = (event, dickJoke) => {
         const updatedOrderForm = {
@@ -71,10 +119,18 @@ state = {
             ...updatedOrderForm[dickJoke]
         };
         updatedFormElement.value = event.target.value;
+        updatedFormElement.valid = this.checkValidity(updatedFormElement.value, updatedFormElement.validation);
+        updatedFormElement.touched = true;
         updatedOrderForm[dickJoke] = updatedFormElement;
-        this.setState({orderForm: updatedOrderForm});
+        
+        let formIsValid = true;
+        for (let dickJoke in updatedOrderForm) {
+            formIsValid = updatedOrderForm[dickJoke].valid && formIsValid;
+        }
+        this.setState({orderForm: updatedOrderForm, formIsValid: formIsValid});
         
     }
+
 
     orderHandler = (event) => {
         event.preventDefault();
@@ -115,13 +171,17 @@ state = {
                     {formElementsArray.map(formElement => (
                         <Input 
                             key={formElement.id}
+                            valueType={formElement.id}
                             elementType={formElement.config.elementType}
                             elementConfig={formElement.config.elementConfig}
-                            value={formElement.config.value} 
+                            value={formElement.config.value}
+                            invalid={!formElement.config.valid} 
+                            shouldValidate={formElement.config.validation}
+                            touched={formElement.config.touched}
                             changed={(event) => this.inputChangedHandler(event, formElement.id)} />
                         ) 
                     )}
-                    <Button btnType="Success">ORDER</Button>
+                    <Button btnType="Success" disabled={!this.state.formIsValid}>ORDER</Button>
                 </form>
         );
         if (this.state.loading) {
